@@ -6,7 +6,7 @@ department=Blueprint('department', __name__)
 
 # create new department
 
-@department.route('/department', methods=['POST'])
+@department.route('/departments', methods=['POST'])
 def create_department():
     data=request.get_json()
     errors={}
@@ -22,7 +22,7 @@ def create_department():
         return jsonify({'errors':errors}), 400
     
     if Department.query.filter_by(code=code).first():
-        return jsonify({'error':f"Derpartment code '{code}' is already in use."}), 409
+        return jsonify({'error':f"Department code '{code}' is already in use."}), 409
     
     department=Department(name=name, code=code)
     
@@ -33,15 +33,25 @@ def create_department():
 
 # list of department
 
-@department.route('/department', methods=['GET'])
+@department.route('/departments', methods=['GET'])
 def list_department():
-    departments=Department.query.all()
+    page=request.args.get('page', 1, type=int)
+    per_page=request.args.get('per_page', 20, type=int)
+    per_page=min(per_page, 100)
     
-    return jsonify([d.to_dict() for d in departments]), 200
+    pagination=Department.query.paginate(page=page, per_page=per_page, error_out=False)
+    
+    return jsonify({
+        'departments':[d.to_dict() for d in pagination.items],
+        'total':pagination.total,
+        'page':pagination.page,
+        'pages':pagination.pages,
+        'per_page':pagination.per_page
+    }), 200
 
 # get department by id
 
-@department.route('/department/<int:department_id>', methods=['GET'])
+@department.route('/departments/<int:department_id>', methods=['GET'])
 def get_department(department_id):
     department=db.session.get(Department, department_id)
     
@@ -52,7 +62,7 @@ def get_department(department_id):
 
 # update department by id
 
-@department.route('/department/<int:department_id>', methods=['PUT'])
+@department.route('/departments/<int:department_id>', methods=['PUT'])
 def update_department(department_id):
     department=db.session.get(Department, department_id)
     
@@ -77,7 +87,7 @@ def update_department(department_id):
 
 # delete department by id
 
-@department.route('/department/<int:department_id>', methods=['DELETE'])
+@department.route('/departments/<int:department_id>', methods=['DELETE'])
 def delete_department(department_id):
     department=db.session.get(Department, department_id)
     
@@ -91,7 +101,7 @@ def delete_department(department_id):
 
 #  list courses by department id 
 
-@department.route('/department/<int:department_id>/courses', methods=['GET'])
+@department.route('/departments/<int:department_id>/courses', methods=['GET'])
 def list_courses(department_id):
     department=db.session.get(Department, department_id)
     
