@@ -5,6 +5,7 @@ from datetime import datetime
 
 student=Blueprint('student', __name__)
 
+#create new student
 
 @student.route('/students', methods=['POST'])
 def create_student():
@@ -25,7 +26,7 @@ def create_student():
         return jsonify({'errors':errors}),400
     
     if Student.query.filter_by(email=email).first():
-        return jsonify({'error':f"Email '{email}' is already in use."})
+        return jsonify({'error':f"Email '{email}' is already in use."}), 409
     
     student=Student(first_name=first_name, last_name=last_name, email=email)
     
@@ -33,6 +34,8 @@ def create_student():
     db.session.commit()
     
     return jsonify(student.to_dict()), 201
+
+# list of student
 
 @student.route('/students', methods=['GET'])
 def list_students():
@@ -50,6 +53,8 @@ def list_students():
         'per_page':pagination.per_page
     }), 200
 
+# get student by id
+
 @student.route('/students/<int:student_id>', methods=['GET'])
 def get_student(student_id):
     student=db.session.get(Student, student_id)
@@ -59,9 +64,10 @@ def get_student(student_id):
     
     return jsonify(student.to_dict()), 200
 
+# update student by id
 
 @student.route('/students/<int:student_id>', methods=['PUT'])
-def update_studet(student_id):
+def update_student(student_id):
     student=db.session.get(Student, student_id)
     
     if not student:
@@ -69,7 +75,7 @@ def update_studet(student_id):
     
     data=request.get_json()
     
-    if 'fisrt_name' in data:
+    if 'first_name' in data:
         student.first_name=data['first_name'].strip() or student.first_name 
     
     if 'last_name' in data:
@@ -79,12 +85,14 @@ def update_studet(student_id):
         new_email=data['email'].strip()
         
         if new_email != student.email and Student.query.filter_by(email=new_email).first():
-            return jsonify({'error':f"Email '{new_email}' is already in use."})
+            return jsonify({'error':f"Email '{new_email}' is already in use."}), 409
         
         student.email=new_email
     
     db.session.commit()
     return jsonify(student.to_dict()), 200   
+
+# delete student by id
 
 @student.route('/students/<int:student_id>', methods=['DELETE'])
 def delete_student(student_id):
@@ -96,6 +104,8 @@ def delete_student(student_id):
     db.session.delete(student)
     db.session.commit()
     return jsonify({'message':'Student deleted successfully!!'}), 200
+
+# create new profile of student by their id
 
 @student.route('/students/<int:student_id>/profile', methods=['POST'])
 def create_profile(student_id):
@@ -111,17 +121,24 @@ def create_profile(student_id):
     
     data=request.get_json()
     
+    if data.get('date_of_birth'):
+        try:
+            date_of_birth = datetime.strptime(data['date_of_birth'], '%Y-%m-%d').date()
+        except ValueError:
+            return jsonify({'error':'date_of_birth must be in YYYY-MM-DD format'}), 400
+    
     profile=StudentProfile(
         student_id=student_id,
-        date_of_birth=data.get['date_of_birth'],
-        phone=data.get['phone'],
-        address=data.get['address'],
-        bio=data.get['bio']
+        date_of_birth=date_of_birth,
+        phone=data.get('phone'),
+        address=data.get('address'),
+        bio=data.get('bio')
     )
     db.session.add(profile)
     db.session.commit()
     return jsonify(profile.to_dict()), 201
     
+# get profile by id
     
 @student.route('/students/<int:student_id>/profile', methods=['GET'])
 def get_profile(student_id):
@@ -136,6 +153,8 @@ def get_profile(student_id):
         return jsonify({'error':'No profile found for this student'}), 404
     
     return jsonify(profile.to_dict()), 200
+
+# update profile by id
             
 @student.route('/students/<int:student_id>/profile', methods=['PUT'])
 def update_profile(student_id):
@@ -168,3 +187,21 @@ def update_profile(student_id):
         
     db.session.commit()
     return jsonify(profile.to_dict()), 200
+
+# delete student profile by student id
+
+@student.route('/students/<int:student_id>/profile', methods=['DELETE'])
+def delete_profile(student_id):
+    student=db.session.get(Student, student_id)
+    
+    if not student:
+        return jsonify({'error':'Student not found'}),404
+    
+    profile=student.profile
+    
+    if not profile:
+         return jsonify({'error':'No profile found for this student'}), 404
+    
+    db.session.delete(profile)
+    db.session.commit()
+    return jsonify({'message':f'Profile of student id:{student_id} deleted successfully.'}), 200
