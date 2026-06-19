@@ -1,7 +1,7 @@
 from flask import Flask
 from config import Config
 from extensions import db
-from routes import student, department
+from routes import student, department, instructor
 
 def create_app(config_class=Config):
     app=Flask(__name__)
@@ -11,6 +11,7 @@ def create_app(config_class=Config):
     
     app.register_blueprint(student)
     app.register_blueprint(department)
+    app.register_blueprint(instructor)
     
     
     with app.app_context():

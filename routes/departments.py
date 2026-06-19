@@ -108,4 +108,4 @@ def list_courses(department_id):
     if not department:
         return jsonify({'error':'Department not found'}), 404
     
-    return jsonify([c.to_dict() for c in department.courses]), 200
+    return jsonify({'courses':[c.to_dict() for c in department.courses]}), 200
