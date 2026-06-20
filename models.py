@@ -15,7 +15,7 @@ class Student(db.Model):
     profile=db.relationship('StudentProfile', backref='student', uselist=False, cascade='all, delete-orphan' )
     
     #many--many
-    enrollment=db.relationship('Enrollment', backref='student', cascade='all, delete-orphan')
+    courses=db.relationship('Enrollment', backref='student', cascade='all, delete-orphan')
     
     def to_dict(self):
         return{
@@ -25,7 +25,7 @@ class Student(db.Model):
             "email": self.email,
             "enrollment_date": self.enrollment_date.isoformat() if self.enrollment_date else None,
             'profile':self.profile.to_dict() if self.profile else None,
-            'courses':[e.course.to_dict() for e in self.enrollment]
+            'courses':[e.course.to_dict() for e in self.courses]
         }
         
 class StudentProfile(db.Model):
@@ -99,7 +99,7 @@ class Course(db.Model):
     instructor_id=db.Column(db.Integer, db.ForeignKey('instructors.id'), nullable=False)
     
     
-    enrollment=db.relationship('Enrollment', backref='course', cascade='all, delete-orphan')
+    enrollments=db.relationship('Enrollment', backref='course', cascade='all, delete-orphan')
     
     def to_dict(self):
         return{
@@ -131,5 +131,5 @@ class Enrollment(db.Model):
             'student_id':self.student_id,
             'course_id':self.course_id,
             'grade':self.grade,
-            'enrolled_at':self.enrolled_at.isoformat() +'Z'if self.enrolled_at else None
+            'enrolled_at':self.enrolled_at.isoformat() if self.enrolled_at else None
         }
