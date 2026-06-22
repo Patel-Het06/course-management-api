@@ -114,7 +114,7 @@ def delete_instructor(instructor_id):
     db.session.delete(instructor)
     db.session.commit()
     
-    return jsonify(instructor.to_dict()), 200
+    return jsonify({'message': 'Instructor deleted.'}), 200
 
 
 # List courses taught by instructor  ONE <---> MANY: instructor to courses
