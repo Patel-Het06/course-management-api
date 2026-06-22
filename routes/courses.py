@@ -132,22 +132,3 @@ def delete_course(course_id):
     db.session.commit()
     
     return jsonify(course.to_dict()), 200
-
-# list students of course   many <--> many
-
-@course.route('/courses/<int:course_id>/students', methods=['GET'])
-def list_students_course(course_id):
-    course=db.session.get(Course, course_id)
-    
-    if not course:
-        return jsonify({'error':'Course not found!'}), 404
-    
-    students=[
-        {**e.to_dict(), 'grade':e.grade, 'emrolled_at':e.enrolled_at.isoformat()}
-        
-        for e in course.enrollments
-    ]
-    return jsonify({"students": students}), 200
-        
-    
-    
